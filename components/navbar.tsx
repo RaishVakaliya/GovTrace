@@ -6,18 +6,20 @@ import { usePathname } from "next/navigation";
 import { AuthSession } from "@/types";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ThemeToggle } from "@/components/theme-toggle";
 import {
-  ShieldCheck,
+  Shield,
   Search,
-  FilePlus2,
+  FilePlus,
   LayoutDashboard,
   Building,
+  User,
   LogOut,
-  UserCheck,
   Menu,
   X,
-  ExternalLink,
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export function Navbar() {
   const pathname = usePathname();
@@ -35,224 +37,161 @@ export function Navbar() {
       .catch(() => {});
   }, [pathname]);
 
-  return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200/80 bg-white/90 backdrop-blur-md dark:border-slate-800 dark:bg-slate-900/90">
-      {/* Top Government Banner */}
-      <div className="bg-slate-900 text-slate-300 text-[11px] px-4 py-1.5 flex items-center justify-between border-b border-slate-800">
-        <div className="flex items-center space-x-2 max-w-7xl mx-auto w-full">
-          <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
-          <span>Official Public Services & Document Processing Network</span>
-          <span className="text-slate-500 hidden sm:inline">|</span>
-          <span className="text-slate-400 hidden sm:inline">
-            Real-Time State Tracking Registry
-          </span>
-          <div className="ml-auto flex items-center space-x-3 text-[11px]">
-            <span className="text-slate-400 hidden md:inline">Demo Switcher:</span>
-            <a
-              href="/api/auth/dev-login?role=citizen"
-              className="text-blue-300 hover:text-white underline-offset-2 hover:underline"
-            >
-              Citizen Mode
-            </a>
-            <span className="text-slate-600">/</span>
-            <a
-              href="/api/auth/dev-login?role=official"
-              className="text-amber-300 hover:text-white underline-offset-2 hover:underline"
-            >
-              Official (Admin) Mode
-            </a>
-          </div>
-        </div>
-      </div>
+  const navLinks = [
+    { href: "/", label: "Track Document", icon: Search },
+    { href: "/dashboard", label: "Citizen Hub", icon: LayoutDashboard },
+    { href: "/apply", label: "New Application", icon: FilePlus },
+    { href: "/admin", label: "Official Console", icon: Building },
+  ];
 
-      {/* Main Navigation Bar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        {/* Brand / Crest */}
-        <Link href="/" className="flex items-center space-x-3 group">
-          <div className="w-10 h-10 rounded-lg bg-blue-900 text-white flex items-center justify-center shadow-md shadow-blue-900/20 group-hover:bg-blue-800 transition-colors">
-            <ShieldCheck className="w-6 h-6 text-blue-200" />
-          </div>
-          <div>
-            <div className="flex items-center space-x-2">
-              <span className="font-extrabold text-lg tracking-tight text-slate-900 dark:text-white">
+  return (
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-sm">
+      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
+        {/* Official Brand Crest */}
+        <div className="flex items-center gap-6">
+          <Link href="/" className="flex items-center gap-2.5">
+            <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-xs">
+              <Shield className="h-4 w-4" />
+            </div>
+            <div className="flex flex-col">
+              <span className="text-sm font-semibold tracking-tight text-foreground leading-none">
                 GovTrace
               </span>
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300 uppercase tracking-wider">
-                Live
+              <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono pt-0.5">
+                Official Registry
               </span>
             </div>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 tracking-tight">
-              State Document Process Tracking
-            </p>
-          </div>
-        </Link>
-
-        {/* Desktop Links */}
-        <nav className="hidden md:flex items-center space-x-1 lg:space-x-2 text-sm font-medium">
-          <Link
-            href="/"
-            className={`px-3 py-2 rounded-md transition-colors flex items-center space-x-1.5 ${
-              pathname === "/"
-                ? "bg-slate-100 text-blue-900 dark:bg-slate-800 dark:text-blue-400"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
-            }`}
-          >
-            <Search className="w-4 h-4" />
-            <span>Public Tracking</span>
           </Link>
 
-          <Link
-            href="/dashboard"
-            className={`px-3 py-2 rounded-md transition-colors flex items-center space-x-1.5 ${
-              pathname.startsWith("/dashboard")
-                ? "bg-slate-100 text-blue-900 dark:bg-slate-800 dark:text-blue-400"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
-            }`}
-          >
-            <LayoutDashboard className="w-4 h-4" />
-            <span>Citizen Portal</span>
-          </Link>
+          <Separator orientation="vertical" className="hidden h-4 md:block" />
 
-          <Link
-            href="/apply"
-            className={`px-3 py-2 rounded-md transition-colors flex items-center space-x-1.5 ${
-              pathname.startsWith("/apply")
-                ? "bg-slate-100 text-blue-900 dark:bg-slate-800 dark:text-blue-400"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
-            }`}
-          >
-            <FilePlus2 className="w-4 h-4" />
-            <span>Apply Online</span>
-          </Link>
+          {/* Desktop Navigation Links */}
+          <nav className="hidden items-center gap-1 md:flex">
+            {navLinks.map((link) => {
+              const isActive =
+                link.href === "/"
+                  ? pathname === "/"
+                  : pathname.startsWith(link.href);
+              const Icon = link.icon;
+              return (
+                <Link key={link.href} href={link.href}>
+                  <Button
+                    variant={isActive ? "secondary" : "ghost"}
+                    size="sm"
+                    className={cn(
+                      "h-8 gap-1.5 px-2.5 text-xs font-normal",
+                      isActive
+                        ? "text-foreground font-medium"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <Icon className="h-3.5 w-3.5" />
+                    <span>{link.label}</span>
+                  </Button>
+                </Link>
+              );
+            })}
+          </nav>
+        </div>
 
-          <Link
-            href="/admin"
-            className={`px-3 py-2 rounded-md transition-colors flex items-center space-x-1.5 ${
-              pathname.startsWith("/admin")
-                ? "bg-slate-100 text-blue-900 dark:bg-slate-800 dark:text-blue-400"
-                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800"
-            }`}
-          >
-            <Building className="w-4 h-4" />
-            <span>Department Official</span>
-          </Link>
-        </nav>
+        {/* Right Section: Theme Toggle & User Auth */}
+        <div className="hidden items-center gap-2 md:flex">
+          {/* Theme Toggle (Light / Dark) */}
+          <ThemeToggle />
 
-        {/* User Account / Auth Section */}
-        <div className="hidden md:flex items-center space-x-3">
+          <Separator orientation="vertical" className="h-4" />
+
           {session ? (
-            <div className="flex items-center space-x-3">
-              <div className="flex items-center space-x-2 pl-2 border-l border-slate-200 dark:border-slate-800">
-                {session.image ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={session.image}
-                    alt={session.name}
-                    className="w-8 h-8 rounded-full border border-slate-300 object-cover"
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center font-bold text-xs">
-                    {session.name.charAt(0)}
-                  </div>
-                )}
-                <div className="text-left">
-                  <div className="flex items-center space-x-1.5">
-                    <span className="text-xs font-semibold text-slate-800 dark:text-slate-200 line-clamp-1 max-w-[120px]">
-                      {session.name}
-                    </span>
-                    <Badge
-                      variant={session.role === "official" ? "review" : "accepted"}
-                      className="text-[10px] py-0 px-1.5 uppercase font-mono"
-                    >
-                      {session.role}
-                    </Badge>
-                  </div>
-                  <p className="text-[10px] text-slate-400 line-clamp-1 max-w-[120px]">
-                    {session.email}
-                  </p>
-                </div>
-              </div>
-
-              <a
-                href="/api/auth/logout"
-                className="text-slate-400 hover:text-red-600 p-1.5 rounded-md hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-                title="Sign Out"
-              >
-                <LogOut className="w-4 h-4" />
+            <div className="flex items-center gap-2">
+              <Link href="/profile">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={cn(
+                    "h-8 gap-2 text-xs font-normal px-2.5",
+                    pathname === "/profile" ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  <User className="h-3.5 w-3.5" />
+                  <span>{session.name}</span>
+                  <Badge variant="outline" className="text-[10px] uppercase font-mono px-1.5 py-0">
+                    {session.role}
+                  </Badge>
+                </Button>
+              </Link>
+              <a href="/api/auth/logout" title="Sign Out">
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground">
+                  <LogOut className="h-3.5 w-3.5" />
+                </Button>
               </a>
             </div>
           ) : (
-            <div className="flex items-center space-x-2">
-              <Link href="/login">
-                <Button size="sm" variant="default" className="text-xs font-semibold shadow-sm">
-                  Sign In with Google
-                </Button>
-              </Link>
-            </div>
+            <Link href="/login">
+              <Button size="sm" variant="outline" className="h-8 text-xs font-normal">
+                Sign In
+              </Button>
+            </Link>
           )}
         </div>
 
-        {/* Mobile menu button */}
-        <div className="md:hidden flex items-center">
-          <button
+        {/* Mobile menu toggle */}
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-300"
+            className="h-8 w-8"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-          </button>
+            {mobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+          </Button>
         </div>
       </div>
 
       {/* Mobile Drawer */}
       {mobileMenuOpen && (
-        <div className="md:hidden px-4 pt-2 pb-6 space-y-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800">
-          <Link
-            href="/"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200"
-          >
-            Public Tracking
-          </Link>
-          <Link
-            href="/dashboard"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200"
-          >
-            Citizen Portal
-          </Link>
-          <Link
-            href="/apply"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200"
-          >
-            Apply Online
-          </Link>
-          <Link
-            href="/admin"
-            onClick={() => setMobileMenuOpen(false)}
-            className="block px-3 py-2 rounded-md text-sm font-medium text-slate-700 hover:bg-slate-100 dark:text-slate-200"
-          >
-            Department Official Console
-          </Link>
-
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex flex-col space-y-2">
+        <div className="border-b border-border bg-background px-4 py-3 md:hidden space-y-1">
+          {navLinks.map((link) => {
+            const isActive =
+              link.href === "/"
+                ? pathname === "/"
+                : pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className={cn(
+                  "flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs",
+                  isActive
+                    ? "bg-secondary text-foreground font-medium"
+                    : "text-muted-foreground hover:bg-muted"
+                )}
+              >
+                <link.icon className="h-3.5 w-3.5" />
+                <span>{link.label}</span>
+              </Link>
+            );
+          })}
+          <div className="pt-2 border-t border-border flex items-center justify-between text-xs">
             {session ? (
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs font-semibold">{session.name}</p>
-                  <p className="text-[11px] text-slate-500">{session.email}</p>
-                </div>
-                <a
-                  href="/api/auth/logout"
-                  className="text-xs text-red-600 font-medium flex items-center"
+              <>
+                <Link
+                  href="/profile"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="text-foreground hover:underline flex items-center gap-1.5"
                 >
-                  <LogOut className="w-3.5 h-3.5 mr-1" /> Sign Out
+                  <User className="h-3.5 w-3.5" />
+                  <span>{session.name} ({session.role})</span>
+                </Link>
+                <a href="/api/auth/logout" className="text-destructive hover:underline">
+                  Logout
                 </a>
-              </div>
+              </>
             ) : (
               <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                <Button size="sm" className="w-full">
-                  Sign In with Google
+                <Button size="sm" variant="outline" className="w-full text-xs">
+                  Sign In
                 </Button>
               </Link>
             )}

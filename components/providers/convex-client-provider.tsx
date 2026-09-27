@@ -8,7 +8,7 @@ interface ConvexContextType {
   isLiveConvex: boolean;
   departments: Department[];
   getByTrackingId: (trackingId: string) => (Application & { department?: Department; statusLogs?: StatusLog[] }) | null;
-  getUserApplications: (userId: string) => Application[];
+  getUserApplications: (userId?: string, userEmail?: string) => Application[];
   getDepartmentApplications: (departmentId?: string, status?: string) => Application[];
   createApplication: (data: {
     userId: string;
@@ -26,7 +26,7 @@ interface ConvexContextType {
     officerName?: string;
     comment?: string;
   }) => { success: boolean };
-  resetData: () => void;
+  clearAll: () => void;
 }
 
 const ConvexContext = createContext<ConvexContextType | null>(null);
@@ -51,12 +51,12 @@ export function ConvexClientProvider({ children }: { children: React.ReactNode }
     isLiveConvex,
     departments,
     getByTrackingId: (trackingId: string) => realtimeStore.getByTrackingId(trackingId),
-    getUserApplications: (userId: string) => realtimeStore.getUserApplications(userId),
+    getUserApplications: (userId?: string, userEmail?: string) => realtimeStore.getUserApplications(userId, userEmail),
     getDepartmentApplications: (deptId?: string, st?: string) =>
       realtimeStore.getDepartmentApplications(deptId, st),
     createApplication: (data) => realtimeStore.createApplication(data),
     updateStatus: (data) => realtimeStore.updateApplicationStatus(data),
-    resetData: () => realtimeStore.resetToDefaults(),
+    clearAll: () => realtimeStore.clearAll(),
   };
 
   return <ConvexContext.Provider value={value}>{children}</ConvexContext.Provider>;

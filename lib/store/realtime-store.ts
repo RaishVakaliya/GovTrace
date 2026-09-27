@@ -5,9 +5,9 @@ import {
   INITIAL_STATUS_LOGS,
 } from "./mock-convex-store";
 
-const APPS_KEY = "govtrace_apps_v1";
-const DEPTS_KEY = "govtrace_depts_v1";
-const LOGS_KEY = "govtrace_logs_v1";
+const APPS_KEY = "govtrace_registry_apps_v2";
+const DEPTS_KEY = "govtrace_registry_depts_v2";
+const LOGS_KEY = "govtrace_registry_logs_v2";
 
 type Listener = () => void;
 
@@ -26,7 +26,7 @@ class RealtimeGovStore {
           }
         };
       } catch {
-        // BroadcastChannel might not be supported in older envs
+        // BroadcastChannel fallback
       }
 
       window.addEventListener("storage", () => {
@@ -110,6 +110,7 @@ class RealtimeGovStore {
   }
 
   public getByTrackingId(trackingId: string) {
+    if (!trackingId) return null;
     const clean = trackingId.trim().toUpperCase();
     const apps = this.getApplications();
     const app = apps.find((a) => a.trackingId.toUpperCase() === clean);
@@ -128,16 +129,22 @@ class RealtimeGovStore {
     };
   }
 
-  public getUserApplications(userId: string) {
-    const apps = this.getApplications().filter(
-      (a) => a.userId === userId || a.applicantEmail?.includes("elena")
-    );
+  public getUserApplications(userId?: string, userEmail?: string) {
+    const apps = this.getApplications();
+    // Return applications filed by the user or all if no user specified
+    const filtered = apps.filter((a) => {
+      if (!userId && !userEmail) return true;
+      if (userId && a.userId === userId) return true;
+      if (userEmail && a.applicantEmail?.toLowerCase() === userEmail.toLowerCase()) return true;
+      return false;
+    });
+
     const depts = this.getDepartments();
     const deptMap = new Map(depts.map((d) => [d._id, d]));
 
-    apps.sort((a, b) => b.createdAt - a.createdAt);
+    filtered.sort((a, b) => b.createdAt - a.createdAt);
 
-    return apps.map((app) => ({
+    return filtered.map((app) => ({
       ...app,
       department: deptMap.get(app.departmentId),
     }));
@@ -196,7 +203,7 @@ class RealtimeGovStore {
       departmentCode: dept?.code || "GOV",
       documentType: data.documentType,
       status: "Submitted",
-      remarks: data.remarks || "Application lodged via Citizen Portal.",
+      remarks: data.remarks || "Application lodged via official portal.",
       createdAt: now,
       updatedAt: now,
     };
@@ -207,7 +214,7 @@ class RealtimeGovStore {
       status: "Submitted",
       updatedBy: data.applicantName,
       timestamp: now,
-      comment: "Document request successfully lodged into GovTrace.",
+      comment: "Document request successfully lodged into GovTrace registry.",
     };
 
     apps.unshift(newApp);
@@ -270,11 +277,10 @@ class RealtimeGovStore {
     return { success: true };
   }
 
-  public resetToDefaults() {
+  public clearAll() {
     if (typeof window === "undefined") return;
-    localStorage.setItem(DEPTS_KEY, JSON.stringify(INITIAL_DEPARTMENTS));
-    localStorage.setItem(APPS_KEY, JSON.stringify(INITIAL_APPLICATIONS));
-    localStorage.setItem(LOGS_KEY, JSON.stringify(INITIAL_STATUS_LOGS));
+    localStorage.setItem(APPS_KEY, JSON.stringify([]));
+    localStorage.setItem(LOGS_KEY, JSON.stringify([]));
     this.broadcast();
   }
 }

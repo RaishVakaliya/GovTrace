@@ -1,25 +1,28 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useGovStore } from "@/components/providers/convex-client-provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import {
-  FilePlus2,
-  ShieldCheck,
-  CheckCircle2,
-  ArrowRight,
-  Building2,
-  FileText,
-  User,
-  Mail,
-  CreditCard,
-  Loader2,
-} from "lucide-react";
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "@/components/ui/card";
+import {
+  Breadcrumb,
+  BreadcrumbList,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
+import { Check, Loader2, ArrowRight } from "lucide-react";
 
 const DEPARTMENT_DOCUMENTS: Record<string, string[]> = {
   "dept-1": [
@@ -49,7 +52,6 @@ const DEPARTMENT_DOCUMENTS: Record<string, string[]> = {
 };
 
 export default function ApplyPage() {
-  const router = useRouter();
   const { departments, createApplication } = useGovStore();
 
   const [selectedDeptId, setSelectedDeptId] = useState("dept-1");
@@ -73,7 +75,6 @@ export default function ApplyPage() {
       .catch(() => {});
   }, []);
 
-  // Update document type when department changes
   useEffect(() => {
     const docs = DEPARTMENT_DOCUMENTS[selectedDeptId] || [];
     if (docs.length > 0) {
@@ -99,196 +100,182 @@ export default function ApplyPage() {
 
       setGeneratedTrackingId(res.trackingId);
     } catch (err) {
-      console.error("Application submission failed:", err);
+      console.error("Submission error:", err);
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="max-w-3xl mx-auto px-4 sm:px-6 py-10 space-y-6">
-      {/* Title */}
+    <div className="mx-auto max-w-2xl px-4 py-8 sm:px-6 space-y-6">
+      {/* Breadcrumbs */}
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/dashboard">Citizen Hub</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>New Request</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       <div className="space-y-1">
-        <div className="flex items-center space-x-2">
-          <FilePlus2 className="w-6 h-6 text-blue-700 dark:text-blue-400" />
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            Apply for Official State Document
-          </h1>
-        </div>
-        <p className="text-xs sm:text-sm text-slate-500">
-          Electronic submission gateway. Once submitted, your request is cryptographically indexed and can be tracked in real time.
+        <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+          Lodge Document Application
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Submit official request for civil, licensing, or property records.
         </p>
       </div>
 
       {generatedTrackingId ? (
-        <Card className="border-emerald-300 dark:border-emerald-800 bg-white dark:bg-slate-900 shadow-xl overflow-hidden">
-          <div className="bg-emerald-600 text-white p-6 text-center space-y-2">
-            <CheckCircle2 className="w-12 h-12 mx-auto" />
-            <h2 className="text-xl font-bold">Application Lodged Successfully!</h2>
-            <p className="text-xs text-emerald-100 max-w-md mx-auto">
-              Your document request has been received by the target department and logged into the Convex real-time audit ledger.
+        <Card className="text-center p-8 space-y-4">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-secondary text-foreground mx-auto">
+            <Check className="h-5 w-5" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-base font-semibold text-foreground">
+              Application Successfully Lodged
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              Your tracking reference has been created and indexed in the state registry.
             </p>
           </div>
 
-          <CardContent className="p-6 sm:p-8 space-y-6 text-center">
-            <div className="p-4 bg-slate-50 dark:bg-slate-800/60 rounded-xl border border-slate-200 dark:border-slate-700 max-w-sm mx-auto">
-              <span className="text-xs text-slate-400 uppercase tracking-wider font-semibold block">
-                Your Unique Tracking ID
-              </span>
-              <span className="font-mono text-2xl font-black text-blue-900 dark:text-blue-300 tracking-wider">
-                {generatedTrackingId}
-              </span>
-            </div>
+          <div className="rounded-md border border-border bg-muted/40 p-3 max-w-xs mx-auto">
+            <span className="text-[11px] text-muted-foreground block">Reference ID</span>
+            <span className="font-mono text-base font-semibold text-foreground">
+              {generatedTrackingId}
+            </span>
+          </div>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Link href={`/track/${generatedTrackingId}`}>
-                <Button size="lg" className="w-full sm:w-auto text-xs font-semibold">
-                  <span>View Live Tracking Stepper</span>
-                  <ArrowRight className="w-4 h-4 ml-1.5" />
-                </Button>
-              </Link>
-
-              <Link href="/dashboard">
-                <Button variant="outline" size="lg" className="w-full sm:w-auto text-xs font-semibold">
-                  Back to Dashboard
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
+          <div className="flex items-center justify-center gap-3 pt-2">
+            <Link href={`/track/${generatedTrackingId}`}>
+              <Button size="sm" className="h-8 text-xs font-normal">
+                <span>View Status Stepper</span>
+                <ArrowRight className="h-3.5 w-3.5 ml-1" />
+              </Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button variant="outline" size="sm" className="h-8 text-xs font-normal">
+                Return to Hub
+              </Button>
+            </Link>
+          </div>
         </Card>
       ) : (
-        <Card className="border-slate-200 dark:border-slate-800 shadow-xl bg-white dark:bg-slate-900">
+        <Card>
           <form onSubmit={handleSubmit}>
-            <CardHeader className="border-b border-slate-100 dark:border-slate-800 pb-4">
-              <CardTitle className="text-base">Document Application Form</CardTitle>
+            <CardHeader className="pb-4">
+              <CardTitle className="text-sm font-semibold">
+                Application Specifications
+              </CardTitle>
               <CardDescription className="text-xs">
-                Fill in the verified applicant and target administrative details below.
+                Select target authority and verify applicant details.
               </CardDescription>
             </CardHeader>
 
-            <CardContent className="p-6 space-y-5">
-              {/* Department & Document Type Selection */}
-              <div className="space-y-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center">
-                  <Building2 className="w-3.5 h-3.5 mr-1.5" />
-                  1. Administrative Routing
-                </h3>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground block">
+                    Target Department
+                  </label>
+                  <Select
+                    value={selectedDeptId}
+                    onChange={(e) => setSelectedDeptId(e.target.value)}
+                    className="h-9 text-xs"
+                  >
+                    {departments.map((dept) => (
+                      <option key={dept._id} value={dept._id}>
+                        {dept.name} ({dept.code})
+                      </option>
+                    ))}
+                  </Select>
+                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                      Target Department:
-                    </label>
-                    <Select
-                      value={selectedDeptId}
-                      onChange={(e) => setSelectedDeptId(e.target.value)}
-                      className="text-xs"
-                    >
-                      {departments.map((dept) => (
-                        <option key={dept._id} value={dept._id}>
-                          {dept.name} ({dept.code})
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                      Document Type:
-                    </label>
-                    <Select
-                      value={selectedDocType}
-                      onChange={(e) => setSelectedDocType(e.target.value)}
-                      className="text-xs"
-                    >
-                      {(DEPARTMENT_DOCUMENTS[selectedDeptId] || []).map((doc) => (
-                        <option key={doc} value={doc}>
-                          {doc}
-                        </option>
-                      ))}
-                    </Select>
-                  </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground block">
+                    Document Type
+                  </label>
+                  <Select
+                    value={selectedDocType}
+                    onChange={(e) => setSelectedDocType(e.target.value)}
+                    className="h-9 text-xs"
+                  >
+                    {(DEPARTMENT_DOCUMENTS[selectedDeptId] || []).map((doc) => (
+                      <option key={doc} value={doc}>
+                        {doc}
+                      </option>
+                    ))}
+                  </Select>
                 </div>
               </div>
 
-              {/* Applicant Personal Credentials */}
-              <div className="space-y-4 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center">
-                  <User className="w-3.5 h-3.5 mr-1.5" />
-                  2. Applicant Credentials
-                </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground block">
+                    Applicant Full Name
+                  </label>
+                  <Input
+                    type="text"
+                    required
+                    value={applicantName}
+                    onChange={(e) => setApplicantName(e.target.value)}
+                    className="h-9 text-xs"
+                  />
+                </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                      Full Legal Name:
-                    </label>
-                    <Input
-                      type="text"
-                      required
-                      value={applicantName}
-                      onChange={(e) => setApplicantName(e.target.value)}
-                      placeholder="e.g. Elena Rostova"
-                      className="text-xs"
-                    />
-                  </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-medium text-foreground block">
+                    Official Email
+                  </label>
+                  <Input
+                    type="email"
+                    required
+                    value={applicantEmail}
+                    onChange={(e) => setApplicantEmail(e.target.value)}
+                    className="h-9 text-xs"
+                  />
+                </div>
 
-                  <div>
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                      Official Contact Email:
-                    </label>
-                    <Input
-                      type="email"
-                      required
-                      value={applicantEmail}
-                      onChange={(e) => setApplicantEmail(e.target.value)}
-                      placeholder="name@example.gov"
-                      className="text-xs"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block">
-                      National Identity / Passport / Aadhaar Reference:
-                    </label>
-                    <Input
-                      type="text"
-                      required
-                      value={applicantIdNumber}
-                      onChange={(e) => setApplicantIdNumber(e.target.value)}
-                      placeholder="e.g. NAT-77492-X"
-                      className="text-xs font-mono"
-                    />
-                  </div>
+                <div className="sm:col-span-2 space-y-1.5">
+                  <label className="text-xs font-medium text-foreground block">
+                    National ID / Reference Number
+                  </label>
+                  <Input
+                    type="text"
+                    required
+                    value={applicantIdNumber}
+                    onChange={(e) => setApplicantIdNumber(e.target.value)}
+                    className="h-9 text-xs font-mono"
+                  />
                 </div>
               </div>
 
-              {/* Statement / Remarks */}
-              <div className="space-y-2 pt-4 border-t border-slate-100 dark:border-slate-800">
-                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 block">
-                  Additional Notes or Supporting Remarks (Optional):
+              <div className="space-y-1.5 pt-2 border-t border-border">
+                <label className="text-xs font-medium text-foreground block">
+                  Remarks / Supporting Notes (Optional)
                 </label>
                 <textarea
-                  rows={3}
+                  rows={2}
                   value={remarks}
                   onChange={(e) => setRemarks(e.target.value)}
-                  placeholder="Include any specific details, previous document serial numbers, or urgent requirements..."
-                  className="w-full text-xs rounded-md border border-slate-300 bg-white p-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+                  placeholder="Specify any relevant application notes..."
+                  className="w-full text-xs rounded-md border border-input bg-background p-2.5 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
-              </div>
-
-              {/* Security Statement */}
-              <div className="p-3 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-900 text-[11px] text-blue-800 dark:text-blue-300 flex items-center space-x-2">
-                <ShieldCheck className="w-4 h-4 text-blue-700 shrink-0" />
-                <span>
-                  By submitting this form, you certify under penalty of law that the information provided is accurate and verifiable.
-                </span>
               </div>
             </CardContent>
 
-            <CardFooter className="bg-slate-50 dark:bg-slate-800/40 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between p-4">
+            <CardFooter className="flex items-center justify-between border-t border-border p-4">
               <Link href="/dashboard">
-                <Button type="button" variant="outline" size="sm" className="text-xs">
+                <Button type="button" variant="outline" size="sm" className="h-8 text-xs font-normal">
                   Cancel
                 </Button>
               </Link>
@@ -297,18 +284,15 @@ export default function ApplyPage() {
                 type="submit"
                 size="sm"
                 disabled={isSubmitting}
-                className="text-xs font-semibold"
+                className="h-8 text-xs font-normal"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
-                    Submitting Application...
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                    Submitting...
                   </>
                 ) : (
-                  <>
-                    <span>Submit Application & Generate Tracking ID</span>
-                    <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-                  </>
+                  "Submit Application"
                 )}
               </Button>
             </CardFooter>

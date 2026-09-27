@@ -6,7 +6,8 @@ import { Dialog, DialogHeader, DialogTitle, DialogDescription, DialogFooter } fr
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/status-badge";
 import { useGovStore } from "@/components/providers/convex-client-provider";
-import { Check, ShieldCheck, ArrowRight, Loader2 } from "lucide-react";
+import { Check, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface StatusUpdateModalProps {
   application: Application | null;
@@ -25,21 +26,15 @@ export function StatusUpdateModal({
   const [selectedStatus, setSelectedStatus] = useState<ApplicationStatus | null>(null);
   const [remarks, setRemarks] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successNotice, setSuccessNotice] = useState(false);
 
-  // Sync state when application opens
   React.useEffect(() => {
     if (application) {
       setSelectedStatus(application.status);
       setRemarks(application.remarks || "");
-      setSuccessNotice(false);
     }
   }, [application]);
 
   if (!application) return null;
-
-  const currentIdx = APPLICATION_STATUS_ORDER.indexOf(application.status);
-  const nextStatus = currentIdx < APPLICATION_STATUS_ORDER.length - 1 ? APPLICATION_STATUS_ORDER[currentIdx + 1] : null;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -52,17 +47,15 @@ export function StatusUpdateModal({
         status: selectedStatus,
         officerId: officerName,
         officerName: officerName,
-        comment: remarks.trim() || `Status updated to ${selectedStatus} by ${officerName}`,
+        comment: remarks.trim() || `Status updated to ${selectedStatus}`,
       });
 
-      setSuccessNotice(true);
       setTimeout(() => {
         setIsSubmitting(false);
-        setSuccessNotice(false);
         onClose();
-      }, 700);
+      }, 400);
     } catch (err) {
-      console.error("Status update failed:", err);
+      console.error("Status update error:", err);
       setIsSubmitting(false);
     }
   };
@@ -71,71 +64,37 @@ export function StatusUpdateModal({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <form onSubmit={handleSubmit}>
         <DialogHeader>
-          <div className="flex items-center justify-between pr-6">
-            <DialogTitle className="flex items-center space-x-2 text-xl">
-              <ShieldCheck className="w-5 h-5 text-blue-700 dark:text-blue-400" />
-              <span>Update Document Status</span>
-            </DialogTitle>
-          </div>
-          <DialogDescription>
-            Official adjudication console for application{" "}
-            <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
-              {application.trackingId}
-            </span>
+          <DialogTitle className="text-base font-semibold">
+            Update Application Status
+          </DialogTitle>
+          <DialogDescription className="text-xs">
+            Tracking ID: <span className="font-mono font-medium text-foreground">{application.trackingId}</span>
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 my-2">
-          {/* Summary Box */}
-          <div className="bg-slate-50 dark:bg-slate-800/60 p-3.5 rounded-lg border border-slate-200 dark:border-slate-700/60 text-xs grid grid-cols-2 gap-2">
-            <div>
-              <span className="text-slate-500">Applicant:</span>{" "}
-              <span className="font-semibold text-slate-900 dark:text-slate-100">
-                {application.applicantName || "Citizen"}
-              </span>
+        <div className="space-y-4 py-2">
+          {/* Summary */}
+          <div className="rounded-md border border-border bg-muted/40 p-3 text-xs space-y-1.5">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Applicant</span>
+              <span className="font-medium text-foreground">{application.applicantName || "Citizen"}</span>
             </div>
-            <div>
-              <span className="text-slate-500">Document:</span>{" "}
-              <span className="font-semibold text-slate-900 dark:text-slate-100">
-                {application.documentType}
-              </span>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Document Type</span>
+              <span className="font-medium text-foreground">{application.documentType}</span>
             </div>
-            <div className="col-span-2 flex items-center space-x-2 pt-1 border-t border-slate-200 dark:border-slate-700">
-              <span className="text-slate-500">Current Status:</span>
+            <div className="flex justify-between items-center pt-1 border-t border-border">
+              <span className="text-muted-foreground">Current Status</span>
               <StatusBadge status={application.status} />
             </div>
           </div>
 
-          {/* Quick Action Button for Next Logical Milestone */}
-          {nextStatus && (
-            <div className="bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 p-3 rounded-lg flex items-center justify-between">
-              <div>
-                <p className="text-xs font-semibold text-blue-900 dark:text-blue-300">
-                  Quick Advance to Next Stage
-                </p>
-                <p className="text-[11px] text-blue-700 dark:text-blue-400">
-                  Click to set status to {nextStatus}
-                </p>
-              </div>
-              <Button
-                type="button"
-                size="sm"
-                variant="default"
-                onClick={() => setSelectedStatus(nextStatus)}
-                className="text-xs h-8"
-              >
-                Advance to {nextStatus}
-                <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-              </Button>
-            </div>
-          )}
-
-          {/* Stage Selector Grid */}
-          <div>
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2 block">
-              Select Adjudicated Status:
+          {/* Status Selection */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground block">
+              Set New Status
             </label>
-            <div className="grid grid-cols-1 gap-2">
+            <div className="grid grid-cols-1 gap-1.5">
               {APPLICATION_STATUS_ORDER.map((st) => {
                 const isSelected = selectedStatus === st;
                 return (
@@ -143,42 +102,41 @@ export function StatusUpdateModal({
                     key={st}
                     type="button"
                     onClick={() => setSelectedStatus(st)}
-                    className={`flex items-center justify-between p-2.5 rounded-lg border text-left text-xs transition-all ${
+                    className={cn(
+                      "flex items-center justify-between p-2.5 rounded-md border text-left text-xs transition-colors",
                       isSelected
-                        ? "border-blue-600 bg-blue-50 text-blue-900 font-semibold ring-1 ring-blue-500 dark:bg-blue-950/50 dark:text-blue-200 dark:border-blue-500"
-                        : "border-slate-200 bg-white hover:bg-slate-50 text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    }`}
+                        ? "border-primary bg-secondary text-foreground font-medium"
+                        : "border-border bg-card hover:bg-muted text-muted-foreground hover:text-foreground"
+                    )}
                   >
-                    <div className="flex items-center space-x-2">
-                      <StatusBadge status={st} showIcon={false} />
-                      <span>{st}</span>
-                    </div>
-                    {isSelected && <Check className="w-4 h-4 text-blue-700 dark:text-blue-400" />}
+                    <span>{st}</span>
+                    {isSelected && <Check className="h-3.5 w-3.5 text-foreground" />}
                   </button>
                 );
               })}
             </div>
           </div>
 
-          {/* Officer Remarks */}
-          <div>
-            <label className="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5 block">
-              Official Comments & Citizen Instructions:
+          {/* Remarks */}
+          <div className="space-y-1.5">
+            <label className="text-xs font-medium text-foreground block">
+              Official Comments / Collection Instructions
             </label>
             <textarea
-              rows={3}
+              rows={2}
               value={remarks}
               onChange={(e) => setRemarks(e.target.value)}
-              placeholder="e.g. Identity documents vetted. Ready at Counter 4. Bring original National ID."
-              className="w-full text-xs rounded-md border border-slate-300 bg-white p-2.5 text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100"
+              placeholder="e.g. Document verified. Ready for collection at Counter 4."
+              className="w-full text-xs rounded-md border border-input bg-background p-2.5 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
             />
           </div>
         </div>
 
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:gap-0">
           <Button
             type="button"
             variant="outline"
+            size="sm"
             onClick={onClose}
             disabled={isSubmitting}
             className="text-xs"
@@ -187,21 +145,17 @@ export function StatusUpdateModal({
           </Button>
           <Button
             type="submit"
+            size="sm"
             disabled={isSubmitting || !selectedStatus}
             className="text-xs font-medium"
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
                 Broadcasting...
               </>
-            ) : successNotice ? (
-              <>
-                <Check className="w-3.5 h-3.5 mr-1.5" />
-                Updated!
-              </>
             ) : (
-              "Save & Broadcast Status"
+              "Save Changes"
             )}
           </Button>
         </DialogFooter>
