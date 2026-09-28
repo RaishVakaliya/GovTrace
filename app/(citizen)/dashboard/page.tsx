@@ -32,8 +32,8 @@ import {
   ExternalLink,
   ChevronDown,
   ChevronUp,
-  FileText,
   Inbox,
+  Loader2,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { APPLICATION_STATUS_ORDER, AuthSession } from "@/types";
@@ -44,8 +44,10 @@ export default function CitizenDashboardPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     fetch("/api/auth/me")
       .then((res) => res.json())
       .then((data) => {
@@ -56,7 +58,7 @@ export default function CitizenDashboardPage() {
       .catch(() => {});
   }, []);
 
-  const applications = getUserApplications(session?.userId, session?.email);
+  const applications = mounted ? getUserApplications(session?.userId, session?.email) : [];
 
   const filteredApps = applications.filter((app) => {
     const matchesSearch =
@@ -91,8 +93,8 @@ export default function CitizenDashboardPage() {
           <h1 className="text-2xl font-semibold tracking-tight text-foreground">
             Citizen Document Hub
           </h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
-            {session ? (
+          <p className="text-sm text-muted-foreground mt-0.5" suppressHydrationWarning>
+            {mounted && session ? (
               <>Applications registered under <span className="text-foreground font-medium">{session.name}</span>.</>
             ) : (
               "Review and monitor all lodged document verification requests."
@@ -151,7 +153,14 @@ export default function CitizenDashboardPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredApps.length === 0 ? (
+            {!mounted ? (
+              <TableRow>
+                <TableCell colSpan={7} className="text-center py-10 text-xs text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
+                  <span>Loading applications...</span>
+                </TableCell>
+              </TableRow>
+            ) : filteredApps.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12 space-y-3">
                   <Inbox className="h-9 w-9 text-muted-foreground/60 mx-auto" />

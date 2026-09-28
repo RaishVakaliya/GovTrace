@@ -43,6 +43,18 @@ export function ConvexClientProvider({ children }: { children: React.ReactNode }
 
   const [departments, setDepartments] = useState<Department[]>([]);
 
+  // Automatically sync authenticated user to Convex on mount
+  useEffect(() => {
+    fetch("/api/auth/sync-user")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.synced) {
+          console.log("[GovTrace] Authenticated user synchronized with Convex.");
+        }
+      })
+      .catch(() => { });
+  }, []);
+
   useEffect(() => {
     setDepartments(realtimeStore.getDepartments());
   }, [storeVersion]);

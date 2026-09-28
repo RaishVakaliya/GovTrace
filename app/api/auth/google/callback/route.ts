@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { setSessionCookie } from "@/lib/auth/session";
 import { AuthSession } from "@/types";
+import { ConvexHttpClient } from "convex/browser";
+import { api } from "@/convex/_generated/api";
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
@@ -64,7 +66,27 @@ export async function GET(request: NextRequest) {
       role: isOfficial ? "official" : "citizen",
     };
 
+    // 1. Persist authenticated session cookie
     await setSessionCookie(session);
+
+    // 2. Sync user directly to Convex database
+    const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
+    if (convexUrl) {
+      try {
+        const convex = new ConvexHttpClient(convexUrl);
+        await convex.mutation(api.users.upsertUser, {
+          name,
+          email,
+          image: image || undefined,
+          role: isOfficial ? "official" : "citizen",
+        });
+        console.log(`[Convex Sync] User ${email} synchronized to Convex successfully.`);
+      } catch (convexErr) {
+        console.error("[Convex Sync Error] Failed to upsert user into Convex:", convexErr);
+      }
+    } else {
+      console.warn("[Convex Sync Warning] NEXT_PUBLIC_CONVEX_URL is not set in .env.local.");
+    }
 
     // Redirect based on role
     const destination = isOfficial ? "/admin" : "/dashboard";

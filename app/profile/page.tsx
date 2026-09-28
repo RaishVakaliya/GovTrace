@@ -33,15 +33,14 @@ import {
 } from "@/components/ui/breadcrumb";
 import {
   ShieldCheck,
-  UserCheck,
   FileText,
-  Clock,
   ExternalLink,
   LogOut,
   Lock,
   Plus,
   Mail,
   Fingerprint,
+  Loader2,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { AuthSession } from "@/types";
@@ -49,9 +48,10 @@ import { AuthSession } from "@/types";
 export default function ProfilePage() {
   const { getUserApplications } = useGovStore();
   const [session, setSession] = useState<AuthSession | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     fetch("/api/auth/me")
       .then((res) => res.json())
       .then((data) => {
@@ -59,10 +59,10 @@ export default function ProfilePage() {
           setSession(data.user);
         }
       })
-      .finally(() => setIsLoading(false));
+      .catch(() => {});
   }, []);
 
-  const applications = getUserApplications(session?.userId, session?.email);
+  const applications = mounted ? getUserApplications(session?.userId, session?.email) : [];
 
   // Status breakdown
   const submittedCount = applications.filter((a) => a.status === "Submitted").length;
@@ -136,8 +136,8 @@ export default function ProfilePage() {
           <CardContent className="space-y-4 text-xs">
             <div className="space-y-1">
               <span className="text-muted-foreground block text-[11px]">Full Legal Name</span>
-              <span className="font-semibold text-foreground text-sm block">
-                {session?.name || "State Registrant"}
+              <span className="font-semibold text-foreground text-sm block" suppressHydrationWarning>
+                {mounted ? (session?.name || "State Registrant") : "Loading..."}
               </span>
             </div>
 
@@ -145,19 +145,23 @@ export default function ProfilePage() {
 
             <div className="space-y-1">
               <span className="text-muted-foreground block text-[11px]">Official Email</span>
-              <div className="flex items-center gap-1.5 text-foreground font-mono">
+              <div className="flex items-center gap-1.5 text-foreground font-mono" suppressHydrationWarning>
                 <Mail className="h-3 w-3 text-muted-foreground" />
-                <span>{session?.email || "verified.identity@gov.state"}</span>
+                <span>{mounted ? (session?.email || "verified.identity@gov.state") : "..."}</span>
               </div>
+              <span className="text-[10px] text-muted-foreground flex items-center gap-1 pt-0.5">
+                <Lock className="h-2.5 w-2.5 text-muted-foreground" />
+                Identity Provider Verified (Immutable)
+              </span>
             </div>
 
             <Separator />
 
             <div className="space-y-1">
               <span className="text-muted-foreground block text-[11px]">Assigned Role</span>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2" suppressHydrationWarning>
                 <Badge variant="outline" className="font-mono text-xs uppercase">
-                  {session?.role || "Citizen"}
+                  {mounted ? (session?.role || "Citizen") : "Citizen"}
                 </Badge>
                 <span className="text-[11px] text-muted-foreground">
                   {session?.role === "official" ? "Department Adjudicator" : "State Citizen"}
@@ -198,43 +202,43 @@ export default function ProfilePage() {
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                 <div className="rounded-md border border-border p-3 space-y-1">
                   <span className="text-[11px] text-muted-foreground block">Total Lodged</span>
-                  <span className="text-xl font-semibold font-mono text-foreground">
-                    {applications.length}
+                  <span className="text-xl font-semibold font-mono text-foreground" suppressHydrationWarning>
+                    {mounted ? applications.length : 0}
                   </span>
                 </div>
 
                 <div className="rounded-md border border-border p-3 space-y-1">
                   <span className="text-[11px] text-muted-foreground block">Under Review</span>
-                  <span className="text-xl font-semibold font-mono text-amber-600 dark:text-amber-400">
-                    {underReviewCount}
+                  <span className="text-xl font-semibold font-mono text-amber-600 dark:text-amber-400" suppressHydrationWarning>
+                    {mounted ? underReviewCount : 0}
                   </span>
                 </div>
 
                 <div className="rounded-md border border-border p-3 space-y-1">
                   <span className="text-[11px] text-muted-foreground block">Ready for Collection</span>
-                  <span className="text-xl font-semibold font-mono text-emerald-600 dark:text-emerald-400">
-                    {readyCount}
+                  <span className="text-xl font-semibold font-mono text-emerald-600 dark:text-emerald-400" suppressHydrationWarning>
+                    {mounted ? readyCount : 0}
                   </span>
                 </div>
 
                 <div className="rounded-md border border-border p-3 space-y-1">
                   <span className="text-[11px] text-muted-foreground block">Submitted / Intake</span>
-                  <span className="text-base font-semibold font-mono text-foreground">
-                    {submittedCount}
+                  <span className="text-base font-semibold font-mono text-foreground" suppressHydrationWarning>
+                    {mounted ? submittedCount : 0}
                   </span>
                 </div>
 
                 <div className="rounded-md border border-border p-3 space-y-1">
                   <span className="text-[11px] text-muted-foreground block">Accepted</span>
-                  <span className="text-base font-semibold font-mono text-foreground">
-                    {acceptedCount}
+                  <span className="text-base font-semibold font-mono text-foreground" suppressHydrationWarning>
+                    {mounted ? acceptedCount : 0}
                   </span>
                 </div>
 
                 <div className="rounded-md border border-border p-3 space-y-1">
                   <span className="text-[11px] text-muted-foreground block">Approved / Printing</span>
-                  <span className="text-base font-semibold font-mono text-foreground">
-                    {printingCount}
+                  <span className="text-base font-semibold font-mono text-foreground" suppressHydrationWarning>
+                    {mounted ? printingCount : 0}
                   </span>
                 </div>
               </div>
@@ -259,8 +263,8 @@ export default function ProfilePage() {
           <h2 className="text-sm font-semibold tracking-tight text-foreground">
             Registered Applications
           </h2>
-          <span className="text-xs text-muted-foreground">
-            {applications.length} {applications.length === 1 ? "record" : "records"} found
+          <span className="text-xs text-muted-foreground" suppressHydrationWarning>
+            {mounted ? `${applications.length} ${applications.length === 1 ? "record" : "records"} found` : "Loading records..."}
           </span>
         </div>
 
@@ -277,7 +281,14 @@ export default function ProfilePage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {applications.length === 0 ? (
+              {!mounted ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-10 text-xs text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin mx-auto mb-2" />
+                    <span>Loading registry records...</span>
+                  </TableCell>
+                </TableRow>
+              ) : applications.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-10 space-y-3">
                     <FileText className="h-8 w-8 text-muted-foreground mx-auto" />

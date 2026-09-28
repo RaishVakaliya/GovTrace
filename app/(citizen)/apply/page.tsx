@@ -22,7 +22,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Check, Loader2, ArrowRight } from "lucide-react";
+import { Check, Loader2, ArrowRight, Lock, ShieldCheck } from "lucide-react";
 
 const DEPARTMENT_DOCUMENTS: Record<string, string[]> = {
   "dept-1": [
@@ -56,23 +56,31 @@ export default function ApplyPage() {
 
   const [selectedDeptId, setSelectedDeptId] = useState("dept-1");
   const [selectedDocType, setSelectedDocType] = useState("");
-  const [applicantName, setApplicantName] = useState("Elena Rostova");
-  const [applicantEmail, setApplicantEmail] = useState("elena.rostova@example.gov");
-  const [applicantIdNumber, setApplicantIdNumber] = useState("NAT-77492-X");
+  const [applicantName, setApplicantName] = useState("");
+  const [applicantEmail, setApplicantEmail] = useState("");
+  const [applicantIdNumber, setApplicantIdNumber] = useState("");
   const [remarks, setRemarks] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [generatedTrackingId, setGeneratedTrackingId] = useState<string | null>(null);
+
+  // Authenticated state & lock
+  const [sessionUserId, setSessionUserId] = useState<string>("");
+  const [isEmailLocked, setIsEmailLocked] = useState(false);
 
   useEffect(() => {
     fetch("/api/auth/me")
       .then((res) => res.json())
       .then((data) => {
         if (data.user) {
-          setApplicantName(data.user.name || "Elena Rostova");
-          setApplicantEmail(data.user.email || "elena.rostova@example.gov");
+          setApplicantName(data.user.name || "");
+          setApplicantEmail(data.user.email || "");
+          setSessionUserId(data.user.userId || "");
+          if (data.user.email) {
+            setIsEmailLocked(true);
+          }
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   useEffect(() => {
@@ -89,13 +97,13 @@ export default function ApplyPage() {
     setIsSubmitting(true);
     try {
       const res = createApplication({
-        userId: "demo-citizen-1",
+        userId: sessionUserId || "citizen-" + Date.now(),
         applicantName,
-        applicantEmail,
+        applicantEmail, // Strictly verified email
         applicantIdNumber,
         departmentId: selectedDeptId,
         documentType: selectedDocType,
-        remarks: remarks || "Application lodged via Citizen Portal.",
+        remarks: remarks || "Official application lodged via Citizen Gateway.",
       });
 
       setGeneratedTrackingId(res.trackingId);
@@ -120,7 +128,7 @@ export default function ApplyPage() {
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbPage>New Request</BreadcrumbPage>
+            <BreadcrumbPage>New Application</BreadcrumbPage>
           </BreadcrumbItem>
         </BreadcrumbList>
       </Breadcrumb>
@@ -130,7 +138,7 @@ export default function ApplyPage() {
           Lodge Document Application
         </h1>
         <p className="text-sm text-muted-foreground">
-          Submit official request for civil, licensing, or property records.
+          Official statutory submission gateway for civil, licensing, and deed records.
         </p>
       </div>
 
@@ -141,10 +149,10 @@ export default function ApplyPage() {
           </div>
           <div className="space-y-1">
             <h2 className="text-base font-semibold text-foreground">
-              Application Successfully Lodged
+              Application Lodged in State Registry
             </h2>
             <p className="text-xs text-muted-foreground">
-              Your tracking reference has been created and indexed in the state registry.
+              Your tracking reference has been created and indexed with live Convex status streaming.
             </p>
           </div>
 
@@ -221,28 +229,52 @@ export default function ApplyPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2 border-t border-border">
                 <div className="space-y-1.5">
                   <label className="text-xs font-medium text-foreground block">
-                    Applicant Full Name
+                    Applicant Full Legal Name
                   </label>
                   <Input
                     type="text"
                     required
                     value={applicantName}
                     onChange={(e) => setApplicantName(e.target.value)}
+                    placeholder="Enter full legal name"
                     className="h-9 text-xs"
                   />
                 </div>
 
+                {/* Email Field - Immutable and Locked */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-medium text-foreground block">
-                    Official Email
-                  </label>
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-medium text-foreground block">
+                      Official Email
+                    </label>
+                    {isEmailLocked && (
+                      <span className="flex items-center gap-1 text-[10px] text-muted-foreground font-mono">
+                        <Lock className="h-2.5 w-2.5 text-muted-foreground" />
+                        Locked (Identity Verified)
+                      </span>
+                    )}
+                  </div>
                   <Input
                     type="email"
                     required
                     value={applicantEmail}
-                    onChange={(e) => setApplicantEmail(e.target.value)}
-                    className="h-9 text-xs"
+                    readOnly={isEmailLocked}
+                    onChange={(e) => {
+                      if (!isEmailLocked) {
+                        setApplicantEmail(e.target.value);
+                      }
+                    }}
+                    placeholder="name@example.com"
+                    className={`h-9 text-xs ${isEmailLocked
+                        ? "bg-muted/50 text-muted-foreground cursor-not-allowed select-none border-input/60"
+                        : ""
+                      }`}
                   />
+                  <p className="text-[10px] text-muted-foreground">
+                    {isEmailLocked
+                      ? "Email is authenticated via your verified Google session and cannot be modified."
+                      : "Enter the email where official adjudication updates will be sent."}
+                  </p>
                 </div>
 
                 <div className="sm:col-span-2 space-y-1.5">
@@ -254,6 +286,7 @@ export default function ApplyPage() {
                     required
                     value={applicantIdNumber}
                     onChange={(e) => setApplicantIdNumber(e.target.value)}
+                    placeholder="e.g. NAT-19284-B"
                     className="h-9 text-xs font-mono"
                   />
                 </div>
@@ -270,6 +303,13 @@ export default function ApplyPage() {
                   placeholder="Specify any relevant application notes..."
                   className="w-full text-xs rounded-md border border-input bg-background p-2.5 text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
                 />
+              </div>
+
+              <div className="flex items-center gap-2 rounded-md border border-border bg-muted/30 p-2.5 text-[11px] text-muted-foreground">
+                <ShieldCheck className="h-4 w-4 text-foreground/70 shrink-0" />
+                <span>
+                  Official Submission Integrity: Your identity, email, and document payload are logged with statutory audit logging.
+                </span>
               </div>
             </CardContent>
 
