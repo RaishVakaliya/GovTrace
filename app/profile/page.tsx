@@ -41,6 +41,7 @@ import {
   Mail,
   Fingerprint,
   Loader2,
+  Building,
 } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import { AuthSession } from "@/types";
@@ -59,7 +60,7 @@ export default function ProfilePage() {
           setSession(data.user);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
   }, []);
 
   const applications = mounted ? getUserApplications(session?.userId, session?.email) : [];
@@ -98,12 +99,21 @@ export default function ProfilePage() {
         </div>
 
         <div className="flex items-center gap-2">
-          <Link href="/apply">
-            <Button size="sm" className="h-8 gap-1.5 text-xs font-normal">
-              <Plus className="h-3.5 w-3.5" />
-              <span>New Document Request</span>
-            </Button>
-          </Link>
+          {session?.role === "official" ? (
+            <Link href="/admin">
+              <Button size="sm" className="h-8 gap-1.5 text-xs font-normal">
+                <Building className="h-3.5 w-3.5" />
+                <span>Official Queue Console</span>
+              </Button>
+            </Link>
+          ) : (
+            <Link href="/apply">
+              <Button size="sm" className="h-8 gap-1.5 text-xs font-normal">
+                <Plus className="h-3.5 w-3.5" />
+                <span>New Document Request</span>
+              </Button>
+            </Link>
+          )}
           <a href="/api/auth/logout">
             <Button variant="outline" size="sm" className="h-8 gap-1.5 text-xs font-normal">
               <LogOut className="h-3.5 w-3.5" />

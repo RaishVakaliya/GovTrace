@@ -18,6 +18,7 @@ import {
   LogOut,
   Menu,
   X,
+  FileCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,19 +38,27 @@ export function Navbar() {
       .catch(() => {});
   }, [pathname]);
 
-  const navLinks = [
-    { href: "/", label: "Track Document", icon: Search },
-    { href: "/dashboard", label: "Citizen Hub", icon: LayoutDashboard },
-    { href: "/apply", label: "New Application", icon: FilePlus },
-    { href: "/admin", label: "Official Console", icon: Building },
-  ];
+  const isOfficial = session?.role === "official";
+
+  // Dynamic Navigation Links based on authenticated role
+  const navLinks = isOfficial
+    ? [
+        { href: "/admin", label: "Official Queue", icon: Building },
+        { href: "/", label: "Public Search", icon: Search },
+        { href: "/profile", label: "Officer Profile", icon: User },
+      ]
+    : [
+        { href: "/", label: "Track Document", icon: Search },
+        { href: "/dashboard", label: "Citizen Hub", icon: LayoutDashboard },
+        { href: "/apply", label: "New Application", icon: FilePlus },
+      ];
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur-sm">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
         {/* Official Brand Crest */}
         <div className="flex items-center gap-6">
-          <Link href="/" className="flex items-center gap-2.5">
+          <Link href={isOfficial ? "/admin" : "/"} className="flex items-center gap-2.5">
             <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-xs">
               <Shield className="h-4 w-4" />
             </div>
@@ -58,7 +67,7 @@ export function Navbar() {
                 GovTrace
               </span>
               <span className="text-[10px] text-muted-foreground uppercase tracking-widest font-mono pt-0.5">
-                Official Registry
+                {isOfficial ? "Department Portal" : "Official Registry"}
               </span>
             </div>
           </Link>
@@ -96,7 +105,6 @@ export function Navbar() {
 
         {/* Right Section: Theme Toggle & User Auth */}
         <div className="hidden items-center gap-2 md:flex">
-          {/* Theme Toggle (Light / Dark) */}
           <ThemeToggle />
 
           <Separator orientation="vertical" className="h-4" />
@@ -109,7 +117,9 @@ export function Navbar() {
                   size="sm"
                   className={cn(
                     "h-8 gap-2 text-xs font-normal px-2.5",
-                    pathname === "/profile" ? "bg-secondary text-foreground font-medium" : "text-muted-foreground hover:text-foreground"
+                    pathname === "/profile"
+                      ? "bg-secondary text-foreground font-medium"
+                      : "text-muted-foreground hover:text-foreground"
                   )}
                 >
                   <User className="h-3.5 w-3.5" />

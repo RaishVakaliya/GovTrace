@@ -22,7 +22,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import { Check, Loader2, ArrowRight, Lock, ShieldCheck } from "lucide-react";
+import { Check, Loader2, ArrowRight, Lock, ShieldCheck, ShieldAlert, Building } from "lucide-react";
 
 const DEPARTMENT_DOCUMENTS: Record<string, string[]> = {
   "dept-1": [
@@ -65,6 +65,7 @@ export default function ApplyPage() {
 
   // Authenticated state & lock
   const [sessionUserId, setSessionUserId] = useState<string>("");
+  const [userRole, setUserRole] = useState<string>("");
   const [isEmailLocked, setIsEmailLocked] = useState(false);
 
   useEffect(() => {
@@ -75,6 +76,7 @@ export default function ApplyPage() {
           setApplicantName(data.user.name || "");
           setApplicantEmail(data.user.email || "");
           setSessionUserId(data.user.userId || "");
+          setUserRole(data.user.role || "");
           if (data.user.email) {
             setIsEmailLocked(true);
           }
@@ -89,6 +91,33 @@ export default function ApplyPage() {
       setSelectedDocType(docs[0]);
     }
   }, [selectedDeptId]);
+
+  // Strict Permission Check: Department Officials CANNOT lodge citizen applications
+  if (userRole === "official") {
+    return (
+      <div className="mx-auto max-w-xl px-4 py-16 text-center space-y-4">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary text-foreground mx-auto">
+          <ShieldAlert className="h-6 w-6 text-foreground" />
+        </div>
+        <div className="space-y-1">
+          <h1 className="text-lg font-semibold tracking-tight text-foreground">
+            Access Restricted: Official Account
+          </h1>
+          <p className="text-xs text-muted-foreground max-w-sm mx-auto leading-relaxed">
+            Department Officials do not have permission to request or lodge citizen documents. Your account is authorized exclusively for adjudication and queue verification.
+          </p>
+        </div>
+        <div className="pt-2">
+          <Link href="/admin">
+            <Button size="sm" className="h-8 gap-1.5 text-xs font-normal">
+              <Building className="h-3.5 w-3.5" />
+              <span>Return to Official Console</span>
+            </Button>
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
